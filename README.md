@@ -133,7 +133,7 @@ intersection.id_count
 
 
 
-# Difference
+## Difference
 Using <code>a.get_difference(b, 'example')</code> will create a file with all the IDs that are **in a but not in b**.
 
 Parameters:
