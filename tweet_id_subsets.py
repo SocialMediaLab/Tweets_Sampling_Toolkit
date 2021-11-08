@@ -210,11 +210,3 @@ class id_file_manager:
             results.append(self.get_page_sample(p, page_count, name))
 
         return results
-
-
-def hydrate(file_name):
-    raise NotImplementedError
-
-
-def sample_file(input_file, n, mode="absolute", output_file=None):
-    raise NotImplementedError
