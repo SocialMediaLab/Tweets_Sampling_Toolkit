@@ -76,7 +76,7 @@ absolute_sample.id_count
 
 
 
-# Page Samples
+## Page Samples
 Use <code>get_page_samples()</code> to break a large file into multiple smaller files. Each ID from the original file will be present in exactly one of the resulting files. This is helpful when you need to process a large dataset but don't have the resources to do it all at once.
 
 Parameters:
