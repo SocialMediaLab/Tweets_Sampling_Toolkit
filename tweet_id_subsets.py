@@ -1,9 +1,14 @@
 import os
 import random
+from tqdm import tqdm
+import external_sort
+import math
 
 
 class id_file_manager:
-    def __init__(self, file_name, show_progress=False):
+    def __init__(self, file_name, show_progress=False, is_sorted=False):
+        self.is_sorted=is_sorted
+
         self.file = open(file_name, 'rb')
         self.file_name = file_name
         file_length = os.stat(file_name).st_size
@@ -50,6 +55,7 @@ class id_file_manager:
         return self.get_id(index)
 
     def get_random_sample(self, n, output_file, sample_mode="absolute"):
+        print('Generating random sample')
         if sample_mode not in ['absolute', 'percent']:
             raise "Sample mode must be either absolute or percent"
 
@@ -59,7 +65,7 @@ class id_file_manager:
         if n >= self.id_count:
             raise Exception("Sample size too big (not enough IDs in file)")
 
-        with open(output_file, 'w') as out:
+        with open(output_file, 'w') as out, tqdm(total=n) as bar:
             out.write(self.header)
 
             checked_ids = set()
@@ -68,11 +74,9 @@ class id_file_manager:
                 if i in checked_ids:
                     continue
                 out.write(f'{self.get_id(i)}\n')
-
-                if self.show_progress:
-                    if (len(checked_ids) % 10000) == 0:
-                        print(f'Done {len(checked_ids)}/{n}')
                 checked_ids.add(i)
+
+                bar.update(1)
 
         if self.show_progress:
             print(f'Done {n}/{n}')
@@ -83,14 +87,11 @@ class id_file_manager:
         )
 
     def get_set(self):
+        print('Loading file')
+
         s = set()
 
-        for i in range(self.id_count):
-            if (self.show_progress):
-                if (len(s) % 100000) == 0:
-                    print(
-                        f'Loaded {len(s)}/{self.id_count} IDs from file'
-                    )
+        for i in tqdm(range(self.id_count)):
             s.add(self.get_id(i))
 
         if len(s) != self.id_count:
@@ -109,64 +110,86 @@ class id_file_manager:
             bigger = file_manager
             smaller = self
 
-        s = smaller.get_set()
+        sorted = bigger.sort('temp.csv')
 
         with open(output_file, 'w') as f:
             f.write(self.header)
-            for i in range(bigger.id_count):
-                id = bigger.get_id(i)
-                if id in s:
+            for i in tqdm(range(smaller.id_count)):
+                id = smaller.get_id(i)
+                if sorted.contains(id):
                     f.write(f'{id}\n')
 
-                if self.show_progress:
-                    if i % 10000 == 0:
-                        print(f'Checked {i}/{bigger.id_count} IDs')
+        sorted.file.close()
+        os.remove(sorted.file_name)
 
         return id_file_manager(output_file)
+
+    def sort(self, output_file):
+        external_sort.external_sort(self.file_name, output_file, self.id_count)
+        return id_file_manager(output_file, is_sorted=True)
 
     def get_difference(self, file_manager, output_file):
         # The smaller file will be placed in a set
         left = self
         right = file_manager
 
-        s = right.get_set()
+        sorted = right.sort('temp.csv')
         with open(output_file, 'w') as f:
-            f.write(self.header)
-            for i in range(left.id_count):
+            for i in tqdm(range(left.id_count)):
                 id = left.get_id(i)
-                if id not in s:
+                if not sorted.contains(id):
                     f.write(f'{id}\n')
 
-                if self.show_progress:
-                    if i % 10000 == 0:
-                        print(f'Checked {i}/{left.id_count} IDs')
+        sorted.file.close()
+        os.remove('temp.csv')
 
         return id_file_manager(output_file)
 
+    def contains(self, n, min_index=0, max_index=None):
+        if not self.is_sorted:
+            print('Warning: .contains() only works on sorted documents.')
+
+        if max_index is None:
+            max_index = self.id_count
+        if max_index == min_index:
+            return False
+
+        check_id = min_index + math.floor((max_index - min_index)/2)
+        check = self.get_id(check_id)
+        if n < check:
+            return self.contains(n, min_index=min_index, max_index=check_id)
+        if n > check:
+            return self.contains(n, min_index=check_id + 1, max_index=max_index)
+        if n == check:
+            return True
+
     def get_union(self, file_manager, output_file):
-        if (file_manager.id_count < self.id_count):
-            bigger = self
-            smaller = file_manager
-        else:
-            bigger = file_manager
+        print(f'Creating union of the two files in {output_file}')
+
+        if self.id_count < file_manager.id_count:
             smaller = self
+            bigger = file_manager
+        else:
+            smaller = file_manager
+            bigger = self
 
-        s = bigger.get_set()
+        sorted = bigger.sort('temp.csv')
+
         with open(output_file, 'w') as f:
-            f.write(self.header)
-            for id in s:
-                f.write(f'{id}\n')
-            for i in range(smaller.id_count):
-                id = smaller.get_id(i)
-                if id not in s:
-                    f.write(f'{id}\n')
-                    s.add(id)
+            print(f'Writing results from {bigger.file_name}')
+            for i in tqdm(range(sorted.id_count)):
+                f.write(f'{self.get_id(i)}\n')
 
-                if self.show_progress:
-                    if i % 10000 == 0:
-                        print(f'Checked {i}/{smaller.id_count} IDs')
+            print(f'Writing results from {smaller.file_name}')
+            for i in tqdm(range(smaller.id_count)):
+                n = smaller.get_id(i)
+                if not sorted.contains(n):
+                    f.write(f'{self.get_id(i)}\n')
 
-        return id_file_manager()
+        sorted.file.close()
+        os.remove(sorted.file_name)
+
+        return id_file_manager(output_file)
 
     def get_page_sample(self, page_number, page_count, output_file):
         if not isinstance(page_number, int) or not isinstance(page_count, int):
