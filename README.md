@@ -11,8 +11,9 @@ These tools are designed for the lists of Tweet IDs in the [COVID-19 Twitter Str
 # Setup
 
 1. Install Python3
-2. Place the file(s) you will be working with in a directory with tweet_id_subsets.py. We will be using [this file](https://doi.org/10.6084/m9.figshare.16897018) as an example.
-3. Import tweet_id_subsets and create a file manager object:
+2. Install tqdm (progress bar utility): pip3 install tqdm
+3. Place the file(s) you will be working with in a directory with tweet_id_subsets.py and external_sort.py. We will be using [this file](https://doi.org/10.6084/m9.figshare.16897018) as an example.
+4. Import tweet_id_subsets and create a file manager object:
 
 
 ```python
@@ -173,3 +174,5 @@ union.id_count
 ```
 
 
+## Sorting
+This package employs the external sort algorithm by @manangandhi7 for union, difference, and intersection operations. Learn more at [his blog](https://minimalcodes.wordpress.com/2016/05/29/sorting-large-number-of-elements-external-sort-in-cpp/) or the original [GitHub repository](https://github.com/manangandhi7/External-sort).
