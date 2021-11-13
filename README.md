@@ -1,178 +1,167 @@
-# About Tweet ID Tools
+# About the Tweets Sampling Toolkit
 
-The Tweet ID Tools package contains tools to help create subsets and samples of large lists of numbers, such as the Social Media Lab's [COVID-19 Twitter Streaming Dataset](https://stream.covid19misinfo.org/tweet_ids).
+The Tweets Sampling Toolkit contains a set of tools for 1) creating a random sample from massive (100M+) Tweet ID datasets, such as those available in the Social Media Lab's [COVID-19 Twitter Pandemic Archive](https://stream.covid19misinfo.org/tweet_ids) and for 2) performing [set operations](https://www.cuemath.com/algebra/operations-on-sets/) with Tweet ID datasets such as [intersection](https://en.wikipedia.org/wiki/Insertion_sort), [difference](https://en.wikipedia.org/wiki/Comparison_sort), or [union](https://dataschool.com/learn-sql/what-is-the-difference-between-union-and-union-all/).
 
-The methods in this package are optimized to reliably process extremely large CSV files (multiple gigabytes) with minimal memory use.
+The main feature of this toolkit is that it’s optimized to reliably process extremely large CSV files (multiple gigabytes) with minimal memory use. Specifically, the toolkit reads an input file one line at a time whenever possible to minimize memory use.
 
-# File Types
+# Input Format / Supported File Types
 
-These tools are designed for the lists of Tweet IDs in the [COVID-19 Twitter Streaming Dataset](https://stream.covid19misinfo.org/tweet_ids), but will work with any list of uniformly-sized integers separated by line breaks. The first line is skipped if it's non-numeric. The methods read these files one line at a time whenever possible to avoid memory errors. 
+This toolkit is designed to ingest any text/CSV files consisting of a list of uniformly-sized integers separated by line breaks. The first line is skipped if it's non-numeric. You can find sample input files in the [COVID-19 Twitter Pandemic Archive](https://stream.covid19misinfo.org/tweet_ids).
+
+  
 
 # Setup
 
-1. Install Python3
-2. Install tqdm (progress bar utility): pip3 install tqdm
-3. Place the file(s) you will be working with in a directory with tweet_id_subsets.py and external_sort.py. We will be using [this file](https://doi.org/10.6084/m9.figshare.16897018) as an example.
-4. Import tweet_id_subsets and create a file manager object:
+1.  Install Python 3
+    
+2.  Install tqdm (progress bar utility): `pip3 install tqdm`
 
-
+3.  Place the file(s) you will be working with in a directory with **tweets_sampling.py** and **external_sort.py**.
+    
+4.  For testing purposes, you can download and use one of the COVID-19 related datasets from [COVID-19 Twitter Pandemic Archive](https://stream.covid19misinfo.org/tweet_ids)  (Note: In the sample code below, we’re using [this file](https://doi.org/10.6084/m9.figshare.16897018).)
+    
+5.  Import **tweets_sampling** and create a “file manager” object as shown below:
+    
 ```python
-import tweet_id_subsets
+import tweets_sampling
 
-ifm = tweet_id_subsets.id_file_manager(
-    'april_2021_COVID-19_+_Vaccines_Twitter_Streaming_Dataset.csv'
-)
+ifm = tweet_id_subsets.id_file_manager('april_2021_COVID-19_+_Vaccines_Twitter_Streaming_Dataset.csv')
+```
+
+6.  Use the following call to confirm the number of Tweet IDs stored in the input file.
+    
+```python
 ifm.id_count
 ```
 
-
-
-
-    251401
-
-
-
 # Creating Samples
+
 ## Random Samples
-Use <code>get_random_sample()</code> to produce a new randomly chosen, duplicate-free list of IDs from a file.
 
-Parameters: 
-1. <code>n</code>: Number of IDs to include in sample
-2. <code>output_file</code>: Relative path of file to save sample
-3. <code>sample_mode</code> (optional, default "absolute"): Method for choosing sample size - if "percent" is chosen, it will n will give the percentage of the original file to include
+Use `get_random_sample()` to produce a new randomly chosen, duplicate-free list of Tweet IDs from an existing text/csv file.
 
-Returns: An <code>id_file_manager</code> for the resulting file.
+Parameters:
+1.  **n**: Number or percentage of Tweet IDs to include in a sample
+2.  **output_file**: Relative path of a text file to store the sample
+3.  **sample_mode**: Method for choosing the sample size: either "absolute" (default) or "percent" based on the total number of Tweet IDs in the input file.
 
+Returns: An **id_file_manager** object linking to the resulting file with the sample data.
 
 ```python
 # Create a sample containing 20% of our original file
-percent_sample = ifm.get_random_sample(
-    0.2,
-    'percent_sample.csv', 
-    sample_mode='percent'
-)
+
+percent_sample = ifm.get_random_sample( 0.2, 'percent_sample.csv', sample_mode='percent')
+
 percent_sample.id_count
+
+50280
 ```
-
-
-
-
-    50280
-
-
-
 
 ```python
-# Create a sample with 300 IDs from our first sample
+# Create a sample with 300 Tweet IDs from our first sample
+
 absolute_sample = percent_sample.get_random_sample(300, 'absolute_sample.csv')
+
 absolute_sample.id_count
+
+300
 ```
-
-
-
-
-    300
-
-
-
-
+  
 
 ## Page Samples
-Use <code>get_page_samples()</code> to break a large file into multiple smaller files. Each ID from the original file will be present in exactly one of the resulting files. This is helpful when you need to process a large dataset but don't have the resources to do it all at once.
+
+Use `get_page_samples()` to break a large file into multiple smaller files. This is helpful when you need to process a large dataset but don't have the resources to do it all at once.
 
 Parameters:
-1. <code>page_count</code>: The number of output files to create.
-2. <code>output_file</code>: The relative path of resulting files. Page numbers are added to the file names (<code>pages.csv</code> becomes <code>pages_0.csv</code>, <code>pages_1.csv</code>, etc.). Page numbers are zero-padded as needed.
 
-Returns: a list of <code>id_file_manager</code> objects for the resulting files.
+1.  **page_count**: The number of output files to create.
+2.  **output_file**: The relative path of resulting files. Page numbers are added to the file names (pages.csv becomes pages_0.csv, pages_1.csv, etc.). Page numbers are zero-padded as needed.
 
+Returns: a list of **id_file_manager** objects to work with the resulting files if needed.
 
 ```python
 # Split the large file into 5 subsets
-pages = ifm.get_page_samples(5, 'pages.csv')
 
+pages = ifm.get_page_samples(5, 'pages.csv')
 for page in pages:
-    print(f'{page.file_name}: {page.id_count}')
+	print(f'{page.file_name}: {page.id_count}')
+
+pages_0.csv: 50280
+pages_1.csv: 50280
+pages_2.csv: 50280
+pages_3.csv: 50280
+pages_4.csv: 50281
 ```
 
-    pages_0.csv: 50280
-    pages_1.csv: 50280
-    pages_2.csv: 50280
-    pages_3.csv: 50280
-    pages_4.csv: 50281
-
-
 # Comparing Files
-This package also includes several methods for comparing the contents of files, and creating subsets based on them. We'll create file handlers for two files to compare:
 
+This package also includes several methods for comparing the contents of two datasets and performing set operations such as [intersection](https://en.wikipedia.org/wiki/Insertion_sort), [difference](https://en.wikipedia.org/wiki/Comparison_sort), [union](https://dataschool.com/learn-sql/what-is-the-difference-between-union-and-union-all/).
+
+## Intersection
+
+Use `get_intersection()` to create a file containing only Tweet IDs that are in both of the files.
+
+Parameters:
+1.  **file_manager**: A file manager object to compare to
+2.  **output_file**: The relative path of the resulting file.
+    
+Returns: An **id_file_manager** object to interact with the resulting dataset.
 
 ```python
+#Start by establishing a connection with two input files (further referenced as a and b objects)
+
 a = ifm.get_random_sample(0.3, 'a.csv', sample_mode='percent')
 b = ifm.get_random_sample(0.3, 'b.csv', sample_mode='percent')
 ```
 
-## Intersection
-Use <code>get_intersection</code> to create a file containing only tweets that are in **both** of the files.
-
-Parameters:
-1. <code>file_manager</code>: A file manager to compare to
-2. <code>output_file</code>: The relative path of the resulting file.
-
-Returns: An <code>id_file_manager</code> with the resulting dataset.
-
-
 ```python
-# Get all of the files that are in both a and b
+# Compare Tweet IDs stored in each file and save/return only those Tweet IDs that are stored in both datasets: a and b
+
 intersection = a.get_intersection(b, 'intersection.csv')
+
 intersection.id_count
+
+22511
 ```
 
-
-
-
-    22511
-
-
-
 ## Difference
-Using <code>a.get_difference(b, 'example')</code> will create a file with all the IDs that are **in a but not in b**.
+
+Using `a.get_difference(b, 'difference.csv')` will create a file called 'difference.csv’ with Tweet IDs that are in a but not in  b.
 
 Parameters:
-1. <code>file_manager</code>: A file manager to compare to
-2. <code>output_file</code>: The relative path of the resulting file.
+1.  **file_manager**: A file manager object to compare to
+2.  **output_file**: The relative path of the resulting file.
 
-Returns: An <code>id_file_manager</code> with the resulting dataset.
+Returns: An **id_file_manager** object with the resulting dataset.
 
 
 ```python
 # Get all of the IDs that are in a, but not b
 difference = a.get_difference(b, 'difference.csv')
+
 difference.id_count
+
+52909
 ```
 
-
-
-
-    52909
-
-
-
 ## Union
-Use <code>get_union</code> to create a file with all the IDs that are in **either** of two files. The result will account for any overlap and will not contain duplicates.
+
+Use `a.get_union(b, 'union.csv')` to combine Tweet IDs from two datasets (referenced here as **a** and **b**) and save the resulting union in 'union.csv'. The output file will store Tweet IDs that are in either of two input files, excluding any duplicates.
 
 Parameters:
-1. <code>file_manager</code>: A file manager to compare to
-2. <code>output_file</code>: The relative path of the resulting file.
-
-Returns: An <code>id_file_manager</code> with the resulting dataset.
-
+1.  **file_manager**: An “id_file_manager” object that is linked to the dataset to compare to    
+2.  **output_file**: The relative path of the resulting file.
+    
+Returns: An **id_file_manager** object with the resulting dataset.
 
 ```python
-# Get all of the 
+# Merge all Tweet IDs from dataset a and b
+
 union = a.get_union(b, 'union.csv')
+
 union.id_count
 ```
 
+## Credit
 
-## Sorting
-This package employs the external sort algorithm by @manangandhi7 for union, difference, and intersection operations. Learn more at [his blog](https://minimalcodes.wordpress.com/2016/05/29/sorting-large-number-of-elements-external-sort-in-cpp/) or the original [GitHub repository](https://github.com/manangandhi7/External-sort).
+This toolkit relies on a sort algorithm by @manangandhi7 for union, difference, and intersection operations. Learn more at [his blog](https://minimalcodes.wordpress.com/2016/05/29/sorting-large-number-of-elements-external-sort-in-cpp/) or the original [GitHub repository](https://github.com/manangandhi7/External-sort).
