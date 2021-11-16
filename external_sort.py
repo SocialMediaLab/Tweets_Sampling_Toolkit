@@ -57,8 +57,8 @@ def sort_slices(file_name, buffer_size_, id_count):
         shutil.rmtree('./tmp/')
     os.mkdir('./tmp/')
 
-    print("Splitting file")
-    with tqdm(total=id_count) as bar:
+    print("Sorting file (Step 1)")
+    with tqdm(total=id_count+1) as bar:
         read_arr = read_n_int(f, buffer_size_)
         while (len(read_arr) > 0):
             sort_and_write('./tmp/sorted_' + str(chunk), read_arr)
@@ -73,7 +73,7 @@ def min_heap_sort(output_file, id_count):
     min_heap = []
     heapq.heapify(min_heap)
 
-    print('Sorting IDs')
+    print('Sorting file (Step 2)')
     open_files = []
     for f in tqdm(os.listdir('./tmp/')):
         if os.path.isfile('./tmp/' + f):
@@ -82,7 +82,7 @@ def min_heap_sort(output_file, id_count):
             val = file_.readline()
             heapq.heappush(min_heap, (int(val), file_))
 
-    print('Merging IDs')
+    print('Sorting file (Step 3)')
     with tqdm(total=id_count) as bar:
         while(len(min_heap) > 0):
             min_element = heapq.heappop(min_heap)
