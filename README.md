@@ -1,6 +1,6 @@
 # About the Tweets Sampling Toolkit
 
-The Tweets Sampling Toolkit contains a set of tools for 1) creating a random sample from massive (100M+) Tweet ID datasets, such as those available in the Social Media Lab's [COVID-19 Twitter Pandemic Archive](https://stream.covid19misinfo.org/tweet_ids) and for 2) performing [set operations](https://www.cuemath.com/algebra/operations-on-sets/) with Tweet ID datasets such as [intersection](https://en.wikipedia.org/wiki/Insertion_sort), [difference](https://en.wikipedia.org/wiki/Comparison_sort), or [union](https://dataschool.com/learn-sql/what-is-the-difference-between-union-and-union-all/).
+The Tweets Sampling Toolkit contains a set of tools for 1) creating a random sample from massive (100M+) Tweet ID datasets, such as those available in the Social Media Lab's [COVID-19 Twitter Pandemic Archive](https://stream.covid19misinfo.org/tweet_ids) and for 2) performing [set operations](https://www.cuemath.com/algebra/operations-on-sets/) with Tweet ID datasets such as [intersection](https://en.wikipedia.org/wiki/Intersection), [difference](https://en.wikipedia.org/?title=Set_difference&redirect=not), or [union](https://en.wikipedia.org/wiki/Intersection).
 
 The main feature of this toolkit is that it’s optimized to reliably process extremely large CSV files (multiple gigabytes) with minimal memory use. Specifically, the toolkit reads an input file one line at a time whenever possible to minimize memory use.
 
@@ -25,7 +25,7 @@ This toolkit is designed to ingest any text/CSV files consisting of a list of un
 ```python
 import tweets_sampling
 
-ifm = tweet_id_subsets.id_file_manager('april_2021_COVID-19_+_Vaccines_Twitter_Streaming_Dataset.csv')
+ifm = tweets_sampling.id_file_manager('april_2021_COVID-19_+_Vaccines_Twitter_Streaming_Dataset.csv')
 ```
 
 6.  Use the following call to confirm the number of Tweet IDs stored in the input file.
@@ -95,7 +95,7 @@ pages_4.csv: 50281
 
 # Comparing Files
 
-This package also includes several methods for comparing the contents of two datasets and performing set operations such as [intersection](https://en.wikipedia.org/wiki/Insertion_sort), [difference](https://en.wikipedia.org/wiki/Comparison_sort), [union](https://dataschool.com/learn-sql/what-is-the-difference-between-union-and-union-all/).
+This package also includes several methods for comparing the contents of two datasets and performing set operations such as [intersection](https://en.wikipedia.org/wiki/Intersection), [difference](https://en.wikipedia.org/?title=Set_difference&redirect=not), or [union](https://en.wikipedia.org/wiki/Intersection).
 
 ## Intersection
 
